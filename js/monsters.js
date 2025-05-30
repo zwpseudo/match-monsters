@@ -24,6 +24,7 @@ class Monster {
         this.owner = owner;
         this.description = data.description;
         this.portrait = data.portrait;
+        this.rarity = data.rarity || 'common'; // Add rarity
         
         // Stats
         this.baseStats = { ...data.baseStats };
@@ -35,13 +36,13 @@ class Monster {
         // Evolution data
         this.evolutionData = data.evolution;
         this.evolved = false;
-        this.evolutionName = data.evolution.name;
+        this.evolutionName = data.evolution ? data.evolution.name : null;
         
         // Status
         this.currentMana = 0;
         this.berryCount = 0;
         this.statusEffects = [];
-        this.isActive = false;
+        this.isActive = false; // Indicates if this monster is currently active in battle
     }
     
     /**
@@ -57,7 +58,7 @@ class Monster {
      * @returns {number} Current mana capacity
      */
     getManaCapacity() {
-        return this.currentStats.manaCapacity;
+        return this.currentStats.manaCost;
     }
     
     /**
@@ -89,6 +90,26 @@ class Monster {
     }
     
     /**
+     * Removes mana from the monster
+     * @param {number} amount - Amount of mana to remove
+     * @returns {number} Actual amount of mana removed
+     */
+    removeMana(amount) {
+        const oldMana = this.currentMana;
+        const actualAmount = Math.min(amount, this.currentMana);
+        this.currentMana = Math.max(0, this.currentMana - actualAmount);
+        
+        // Emit mana updated event
+        EventSystem.emit(EVENTS.MONSTER_MANA_UPDATED, {
+            monster: this,
+            oldMana,
+            newMana: this.currentMana
+        });
+        
+        return actualAmount;
+    }
+    
+    /**
      * Resets monster's mana to 0
      */
     resetMana() {
@@ -109,7 +130,7 @@ class Monster {
      * @returns {number} New berry count
      */
     addBerries(count) {
-        this.berryCount = Math.min(this.berryCount + count, GAME_CONFIG.BERRIES_FOR_EVOLUTION);
+        this.berryCount += count;
         
         // Emit berries updated event
         EventSystem.emit(EVENTS.PLAYER_BERRIES_UPDATED, {
@@ -125,7 +146,7 @@ class Monster {
      * @returns {boolean} True if monster can evolve
      */
     canEvolve() {
-        return !this.evolved && this.berryCount >= GAME_CONFIG.BERRIES_FOR_EVOLUTION;
+        return !this.evolved && this.evolutionData && this.berryCount >= 4;
     }
     
     /**
@@ -148,7 +169,13 @@ class Monster {
         
         // Apply ability boosts
         for (const [stat, boost] of Object.entries(this.evolutionData.abilityBoost)) {
-            this.ability[stat] += boost;
+            if (stat === 'effect') {
+                // Replace the entire effect object
+                this.ability.effect = { ...boost };
+            } else {
+                // Add the boost to the numeric stat
+                this.ability[stat] += boost;
+            }
         }
         
         // Emit evolution event
@@ -206,32 +233,45 @@ class Monster {
     /**
      * Activates the monster's special ability
      * @param {Array} targets - Potential targets for the ability
+     * @param {Board} board - Game board for board manipulation effects
+     * @param {MonsterManager} monsterManager - Monster manager for monster-related effects
      * @returns {Object} Ability result with damage and effects
      */
-    activateAbility(targets) {
+    activateAbility(targets, board, monsterManager) {
         if (this.currentMana < this.getManaCapacity()) {
             return null;
         }
         
         // Select target (usually opponent's monster)
         const target = this.selectAbilityTarget(targets);
-        if (!target) {
+        if (!target && this.ability.effect.type !== 'HEAL' && 
+            this.ability.effect.type !== 'HEAL_OVER_TIME' && 
+            this.ability.effect.type !== 'EXTRA_MOVE' &&
+            this.ability.effect.type !== 'GIVE_MANA') {
             return null;
         }
         
         // Calculate base damage
         let damage = this.ability.damage;
         
-        // Apply elemental modifiers
-        damage = calculateElementalDamage(damage, this.element, target.element);
+        // Apply elemental modifiers if there's a target
+        if (target) {
+            damage = calculateElementalDamage(damage, this.element, target.element);
+        }
         
-        // Apply status effects if chance roll succeeds
-        let appliedEffect = null;
-        if (Math.random() < this.ability.effectChance) {
-            appliedEffect = { ...this.ability.effect };
-            
-            // Apply the effect to the target
-            target.applyStatusEffect(appliedEffect);
+        // Initialize result object
+        const result = {
+            damage: damage,
+            boardEffects: [],
+            statusEffects: [],
+            healAmount: 0,
+            manaEffects: [],
+            extraMoves: 0
+        };
+        
+        // Process the ability effect based on type
+        if (this.ability.effect) {
+            this.processAbilityEffect(this.ability.effect, target, board, monsterManager, result);
         }
         
         // Reset mana after ability use
@@ -241,8 +281,7 @@ class Monster {
         EventSystem.emit(EVENTS.MONSTER_ABILITY_ACTIVATED, {
             monster: this,
             target,
-            damage,
-            effect: appliedEffect
+            result
         });
         
         // Log the ability activation
@@ -253,9 +292,356 @@ class Monster {
         
         return {
             target,
-            damage,
-            effect: appliedEffect
+            ...result
         };
+    }
+    
+    /**
+     * Processes an ability effect
+     * @param {Object} effect - The effect to process
+     * @param {Monster} target - Target monster (if any)
+     * @param {Board} board - Game board
+     * @param {MonsterManager} monsterManager - Monster manager
+     * @param {Object} result - Result object to update
+     */
+    processAbilityEffect(effect, target, board, monsterManager, result) {
+        switch (effect.type) {
+            case 'MATCH_COLUMN':
+                this.processMatchColumnEffect(effect, board, result);
+                break;
+                
+            case 'MATCH_ROW':
+                this.processMatchRowEffect(effect, board, result);
+                break;
+                
+            case 'MATCH_GRID':
+                this.processMatchGridEffect(effect, board, result);
+                break;
+                
+            case 'MATCH_CROSS':
+                this.processMatchCrossEffect(effect, board, result);
+                break;
+                
+            case 'CONVERT_TILES':
+                this.processConvertTilesEffect(effect, board, result);
+                break;
+                
+            case 'HEAL':
+                this.processHealEffect(effect, result);
+                break;
+                
+            case 'HEAL_OVER_TIME':
+                this.processHealOverTimeEffect(effect, result);
+                break;
+                
+            case 'DRAIN_MANA':
+                this.processDrainManaEffect(effect, target, monsterManager, result);
+                break;
+                
+            case 'GIVE_MANA':
+                this.processGiveManaEffect(effect, monsterManager, result);
+                break;
+                
+            case 'EXTRA_MOVE':
+                this.processExtraMoveEffect(effect, result);
+                break;
+                
+            default:
+                // For backward compatibility with old effects
+                if (target && effect.duration > 0) {
+                    target.applyStatusEffect(effect);
+                    result.statusEffects.push({
+                        target,
+                        effect: { ...effect }
+                    });
+                }
+                break;
+        }
+    }
+    
+    /**
+     * Processes a match column effect
+     * @param {Object} effect - The effect data
+     * @param {Board} board - Game board
+     * @param {Object} result - Result object to update
+     */
+    processMatchColumnEffect(effect, board, result) {
+        const columns = effect.columns || 1;
+        const matchedColumns = [];
+        
+        for (let i = 0; i < columns; i++) {
+            // Select a random column that hasn't been matched yet
+            let column;
+            do {
+                column = Math.floor(Math.random() * board.size);
+            } while (matchedColumns.includes(column));
+            
+            matchedColumns.push(column);
+            
+            // Add to board effects
+            result.boardEffects.push({
+                type: 'MATCH_COLUMN',
+                column
+            });
+        }
+    }
+    
+    /**
+     * Processes a match row effect
+     * @param {Object} effect - The effect data
+     * @param {Board} board - Game board
+     * @param {Object} result - Result object to update
+     */
+    processMatchRowEffect(effect, board, result) {
+        const rows = effect.rows || 1;
+        const matchedRows = [];
+        
+        for (let i = 0; i < rows; i++) {
+            // Select a random row that hasn't been matched yet
+            let row;
+            do {
+                row = Math.floor(Math.random() * board.size);
+            } while (matchedRows.includes(row));
+            
+            matchedRows.push(row);
+            
+            // Add to board effects
+            result.boardEffects.push({
+                type: 'MATCH_ROW',
+                row
+            });
+        }
+    }
+    
+    /**
+     * Processes a match grid effect
+     * @param {Object} effect - The effect data
+     * @param {Board} board - Game board
+     * @param {Object} result - Result object to update
+     */
+    processMatchGridEffect(effect, board, result) {
+        const width = effect.width || 2;
+        const height = effect.height || 2;
+        
+        // Select a random starting position for the grid
+        const startRow = Math.floor(Math.random() * (board.size - height + 1));
+        const startCol = Math.floor(Math.random() * (board.size - width + 1));
+        
+        // Add to board effects
+        result.boardEffects.push({
+            type: 'MATCH_GRID',
+            startRow,
+            startCol,
+            width,
+            height
+        });
+    }
+    
+    /**
+     * Processes a match cross effect
+     * @param {Object} effect - The effect data
+     * @param {Board} board - Game board
+     * @param {Object} result - Result object to update
+     */
+    processMatchCrossEffect(effect, board, result) {
+        // Select a random center point for the cross
+        const centerRow = Math.floor(Math.random() * board.size);
+        const centerCol = Math.floor(Math.random() * board.size);
+        
+        // Add to board effects
+        result.boardEffects.push({
+            type: 'MATCH_CROSS',
+            centerRow,
+            centerCol,
+            rowCount: effect.rows || 1,
+            colCount: effect.columns || 1
+        });
+    }
+    
+    /**
+     * Processes a convert tiles effect
+     * @param {Object} effect - The effect data
+     * @param {Board} board - Game board
+     * @param {Object} result - Result object to update
+     */
+    processConvertTilesEffect(effect, board, result) {
+        const count = effect.count || 3;
+        const element = effect.element || this.element;
+        
+        // Add to board effects
+        result.boardEffects.push({
+            type: 'CONVERT_TILES',
+            count,
+            element
+        });
+    }
+    
+    /**
+     * Processes a heal effect
+     * @param {Object} effect - The effect data
+     * @param {Object} result - Result object to update
+     */
+    processHealEffect(effect, result) {
+        const healAmount = effect.amount || 10;
+        
+        // Add to result
+        result.healAmount = healAmount;
+        
+        // Emit healing event
+        EventSystem.emit(EVENTS.PLAYER_HP_UPDATED, {
+            player: this.owner,
+            hpChange: healAmount,
+            source: this
+        });
+        
+        // Log the healing
+        GameLogger.log(
+            `${this.getCurrentName()} healed ${healAmount} HP!`,
+            this.owner
+        );
+    }
+    
+    /**
+     * Processes a heal over time effect
+     * @param {Object} effect - The effect data
+     * @param {Object} result - Result object to update
+     */
+    processHealOverTimeEffect(effect, result) {
+        const healAmount = effect.amount || 5;
+        const duration = effect.duration || 3;
+        
+        // Create a healing status effect
+        const healEffect = {
+            type: 'HEAL_OVER_TIME',
+            amount: healAmount,
+            duration: duration,
+            turnsRemaining: duration
+        };
+        
+        // Add to player's status effects
+        this.statusEffects.push(healEffect);
+        
+        // Add to result
+        result.statusEffects.push({
+            target: this,
+            effect: { ...healEffect }
+        });
+        
+        // Log the effect
+        GameLogger.log(
+            `${this.getCurrentName()} will heal ${healAmount} HP for ${duration} turns!`,
+            this.owner
+        );
+    }
+    
+    /**
+     * Processes a drain mana effect
+     * @param {Object} effect - The effect data
+     * @param {Monster} target - Target monster
+     * @param {MonsterManager} monsterManager - Monster manager
+     * @param {Object} result - Result object to update
+     */
+    processDrainManaEffect(effect, target, monsterManager, result) {
+        const amount = effect.amount || 2;
+        const opponentPlayer = this.owner === PLAYERS.PLAYER1 ? PLAYERS.PLAYER2 : PLAYERS.PLAYER1;
+        const opponentMonsters = monsterManager.getPlayerMonsters(opponentPlayer);
+        
+        // Drain mana from all opponent monsters
+        opponentMonsters.forEach(monster => {
+            const drained = monster.removeMana(amount);
+            
+            if (drained > 0) {
+                // Add to result
+                result.manaEffects.push({
+                    target: monster,
+                    amount: -drained,
+                    type: 'DRAIN'
+                });
+                
+                // Log the drain
+                GameLogger.log(
+                    `${this.getCurrentName()} drained ${drained} mana from ${monster.getCurrentName()}!`,
+                    this.owner
+                );
+            }
+        });
+    }
+    
+    /**
+     * Processes a give mana effect
+     * @param {Object} effect - The effect data
+     * @param {MonsterManager} monsterManager - Monster manager
+     * @param {Object} result - Result object to update
+     */
+    processGiveManaEffect(effect, monsterManager, result) {
+        const amount = effect.amount || 2;
+        const allyMonsters = monsterManager.getPlayerMonsters(this.owner);
+        
+        // Give mana to ally monsters (except self)
+        allyMonsters.forEach(monster => {
+            if (monster.id !== this.id) {
+                const filled = monster.addMana(amount);
+                
+                // Add to result
+                result.manaEffects.push({
+                    target: monster,
+                    amount: amount,
+                    type: 'GIVE',
+                    filled
+                });
+                
+                // Log the mana gift
+                GameLogger.log(
+                    `${this.getCurrentName()} gave ${amount} mana to ${monster.getCurrentName()}!`,
+                    this.owner
+                );
+            }
+        });
+    }
+    
+    /**
+     * Processes an extra move effect
+     * @param {Object} effect - The effect data
+     * @param {Object} result - Result object to update
+     */
+    processExtraMoveEffect(effect, result) {
+        const moves = effect.moves || 1;
+        const duration = effect.duration || 1;
+        
+        // Add to result
+        result.extraMoves = moves;
+        
+        // Create an extra moves status effect if duration > 1
+        if (duration > 1) {
+            const moveEffect = {
+                type: 'EXTRA_MOVE',
+                moves: moves,
+                duration: duration,
+                turnsRemaining: duration
+            };
+            
+            // Add to player's status effects
+            this.statusEffects.push(moveEffect);
+            
+            // Add to result
+            result.statusEffects.push({
+                target: this,
+                effect: { ...moveEffect }
+            });
+        }
+        
+        // Emit extra move event
+        EventSystem.emit(EVENTS.PLAYER_EXTRA_MOVE_GAINED, {
+            player: this.owner,
+            moves: moves,
+            source: this
+        });
+        
+        // Log the extra moves
+        GameLogger.log(
+            `${this.getCurrentName()} granted ${moves} extra move(s) for ${duration} turn(s)!`,
+            this.owner
+        );
     }
     
     /**
@@ -309,7 +695,16 @@ class Monster {
             'SHIELD': 'Shield',
             'ACCURACY_DOWN': 'Accuracy Reduction',
             'FIELD_EFFECT': 'Field Effect',
-            'RANDOM_ELEMENT': 'Elemental Shift'
+            'RANDOM_ELEMENT': 'Elemental Shift',
+            'HEAL_OVER_TIME': 'Healing Over Time',
+            'EXTRA_MOVE': 'Extra Moves',
+            'DRAIN_MANA': 'Mana Drain',
+            'GIVE_MANA': 'Mana Gift',
+            'MATCH_COLUMN': 'Column Match',
+            'MATCH_ROW': 'Row Match',
+            'MATCH_GRID': 'Grid Match',
+            'MATCH_CROSS': 'Cross Match',
+            'CONVERT_TILES': 'Tile Conversion'
         };
         
         return effectNames[effectType] || effectType;
@@ -349,6 +744,48 @@ class Monster {
                     });
                     break;
                     
+                case 'HEAL_OVER_TIME':
+                    // Heal over time
+                    processedEffects.push({
+                        type: effect.type,
+                        value: effect.amount
+                    });
+                    
+                    // Emit healing event
+                    EventSystem.emit(EVENTS.PLAYER_HP_UPDATED, {
+                        player: this.owner,
+                        hpChange: effect.amount,
+                        source: this
+                    });
+                    
+                    // Log the healing
+                    GameLogger.log(
+                        `${this.getCurrentName()} healed ${effect.amount} HP from over time effect!`,
+                        this.owner
+                    );
+                    break;
+                    
+                case 'EXTRA_MOVE':
+                    // Extra moves on future turns
+                    processedEffects.push({
+                        type: effect.type,
+                        value: effect.moves
+                    });
+                    
+                    // Emit extra move event
+                    EventSystem.emit(EVENTS.PLAYER_EXTRA_MOVE_GAINED, {
+                        player: this.owner,
+                        moves: effect.moves,
+                        source: this
+                    });
+                    
+                    // Log the extra moves
+                    GameLogger.log(
+                        `${this.getCurrentName()} granted ${effect.moves} extra move(s) from ongoing effect!`,
+                        this.owner
+                    );
+                    break;
+                    
                 // Other effect types can be processed here
             }
             
@@ -368,6 +805,9 @@ class Monster {
     takeDamage(amount, attacker) {
         // Calculate actual damage (considering defense)
         const actualDamage = Math.max(1, amount - Math.floor(this.currentStats.defense / 3));
+        
+        // Apply damage to monster's HP
+        this.currentStats.hp = Math.max(0, this.currentStats.hp - actualDamage);
         
         // Emit monster damaged event
         EventSystem.emit(EVENTS.MONSTER_DAMAGED, {
@@ -444,6 +884,7 @@ class Monster {
             element: this.element,
             owner: this.owner,
             portrait: this.portrait,
+            rarity: this.rarity,
             stats: this.getEffectiveStats(),
             currentMana: this.currentMana,
             manaCapacity: this.getManaCapacity(),
@@ -795,9 +1236,10 @@ class MonsterManager {
     /**
      * Processes monster abilities when mana is full
      * @param {string} player - Current player
+     * @param {Board} board - Game board
      * @returns {Array} Ability results
      */
-    processMonsterAbilities(player) {
+    processMonsterAbilities(player, board) {
         const results = [];
         const playerMonsters = this.getPlayerMonsters(player);
         const opponentMonsters = this.getPlayerMonsters(
@@ -808,7 +1250,7 @@ class MonsterManager {
         playerMonsters.forEach(monster => {
             if (monster.getManaPercentage() >= 100) {
                 // Activate ability targeting opponent monsters
-                const abilityResult = monster.activateAbility(opponentMonsters);
+                const abilityResult = monster.activateAbility(opponentMonsters, board, this);
                 
                 if (abilityResult) {
                     results.push({
@@ -829,13 +1271,26 @@ class MonsterManager {
      */
     processStartOfTurnEffects(player) {
         const effects = {
-            statusEffects: []
+            statusEffects: [],
+            extraMoves: 0,
+            healing: 0
         };
         
         // Process status effects for all player monsters
         this.getPlayerMonsters(player).forEach(monster => {
             const processedEffects = monster.processStatusEffects();
+            
             if (processedEffects.length > 0) {
+                // Check for extra moves
+                processedEffects.forEach(effect => {
+                    if (effect.type === 'EXTRA_MOVE') {
+                        effects.extraMoves += effect.value;
+                    }
+                    if (effect.type === 'HEAL_OVER_TIME') {
+                        effects.healing += effect.value;
+                    }
+                });
+                
                 effects.statusEffects.push({
                     monster,
                     effects: processedEffects
@@ -973,7 +1428,7 @@ class MonsterAI {
             
             // Prioritize berry matches if monsters need evolution
             if (match.element === ELEMENT_TYPES.BERRY) {
-                const needsEvolution = monsters.some(m => !m.evolved && m.berryCount < GAME_CONFIG.BERRIES_FOR_EVOLUTION);
+                const needsEvolution = monsters.some(m => !m.evolved && m.berryCount < 4);
                 if (needsEvolution) {
                     score += 4;
                 }

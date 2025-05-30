@@ -18,8 +18,7 @@ const GAME_CONFIG = {
     EXTRA_MOVE_MATCH_SIZE: 4,   // Minimum match size to get an extra move
     MAX_EXTRA_MOVES_PER_TURN: 1,// Maximum extra moves allowed per turn
     
-    // Evolution & Boost
-    BERRIES_FOR_EVOLUTION: 4,   // Berries needed to evolve a monster
+    // Boost
     BERRIES_FOR_BOOST: 4,       // Berries needed to boost a monster
     MANA_FROM_BOOST: 4,         // Mana points added from a boost
     
@@ -43,8 +42,8 @@ const GAME_CONFIG = {
         FIRE: 0.18,
         WATER: 0.18,
         EARTH: 0.18,
-        AIR: 0.18,
-        LIGHT: 0.18,
+        ELECTRIC: 0.18,
+        PSYCHIC: 0.18,
         BERRY: 0.1
     },
     
@@ -62,8 +61,8 @@ const ELEMENT_TYPES = {
     FIRE: 'fire',
     WATER: 'water',
     EARTH: 'earth',
-    AIR: 'air',
-    LIGHT: 'light',
+    ELECTRIC: 'electric',
+    PSYCHIC: 'psychic',
     BERRY: 'berry'  // Special element for evolution
 };
 
@@ -75,19 +74,19 @@ const ELEMENT_RELATIONSHIPS = {
     },
     [ELEMENT_TYPES.WATER]: {
         strong: [ELEMENT_TYPES.FIRE],
-        weak: [ELEMENT_TYPES.EARTH]
+        weak: [ELEMENT_TYPES.ELECTRIC]
     },
     [ELEMENT_TYPES.EARTH]: {
-        strong: [ELEMENT_TYPES.AIR],
+        strong: [ELEMENT_TYPES.ELECTRIC],
         weak: [ELEMENT_TYPES.FIRE]
     },
-    [ELEMENT_TYPES.AIR]: {
+    [ELEMENT_TYPES.ELECTRIC]: {
         strong: [ELEMENT_TYPES.WATER],
         weak: [ELEMENT_TYPES.EARTH]
     },
-    [ELEMENT_TYPES.LIGHT]: {
-        strong: [ELEMENT_TYPES.AIR],
-        weak: [ELEMENT_TYPES.LIGHT]
+    [ELEMENT_TYPES.PSYCHIC]: {
+        strong: [ELEMENT_TYPES.ELECTRIC],
+        weak: [ELEMENT_TYPES.PSYCHIC]
     }
 };
 
@@ -119,375 +118,650 @@ const PLAYERS = {
 const MONSTERS = [
     {
         id: 1,
-        name: 'Emberclaw',
+        name: 'Bonzumi',
         element: ELEMENT_TYPES.FIRE,
         baseStats: {
             hp: 25,
             attack: 8,
             defense: 5,
-            manaCapacity: 10
+            manaCost: 8
         },
         ability: {
-            name: 'Flame Burst',
-            description: 'Deals fire damage to the opponent and has a chance to burn, causing damage over time.',
-            damage: 6,
-            effectChance: 0.3,
+            name: 'Flare',
+            description: 'Attacks for 20 HP and matches a random column.',
+            damage: 20,
             effect: {
-                type: 'DOT',
-                damage: 2,
-                duration: 2
+                type: 'MATCH_COLUMN',
+                columns: 1
             }
         },
         evolution: {
-            name: 'Infernofang',
+            name: 'Bonzire',
+            id: 2,
             statBoosts: {
                 hp: 5,
                 attack: 3,
-                defense: 2,
-                manaCapacity: 2
+                defense: 2
             },
             abilityBoost: {
-                damage: 2,
-                effectChance: 0.4
+                damage: 5,
+                effect: {
+                    type: 'MATCH_COLUMN',
+                    columns: 2
+                }
             }
         },
-        description: 'A fiery feline monster with blazing claws and a temperamental nature.',
-        portrait: 'assets/images/monsters/emberclaw.png'
+        description: 'A fiery monkey-like monster with a blazing tail.',
+        portrait: 'assets/images/monsters/bonzumi.png',
+        rarity: 'common'
     },
     {
         id: 2,
-        name: 'Aquafin',
-        element: ELEMENT_TYPES.WATER,
+        name: 'Bonzire',
+        element: ELEMENT_TYPES.FIRE,
         baseStats: {
             hp: 30,
-            attack: 6,
+            attack: 11,
             defense: 7,
-            manaCapacity: 9
+            manaCost: 8
         },
         ability: {
-            name: 'Tidal Wave',
-            description: 'Unleashes a powerful wave that deals water damage and may reduce the opponent\'s attack.',
-            damage: 5,
-            effectChance: 0.4,
+            name: 'Flare+',
+            description: 'Attacks for 25 HP and matches 2 random columns.',
+            damage: 25,
             effect: {
-                type: 'DEBUFF',
-                stat: 'attack',
-                amount: -2,
-                duration: 2
+                type: 'MATCH_COLUMN',
+                columns: 2
             }
         },
-        evolution: {
-            name: 'Tsunamiray',
-            statBoosts: {
-                hp: 7,
-                attack: 2,
-                defense: 3,
-                manaCapacity: 2
-            },
-            abilityBoost: {
-                damage: 2,
-                effectChance: 0.5
-            }
-        },
-        description: 'A graceful aquatic monster that can manipulate water currents with its elegant fins.',
-        portrait: 'assets/images/monsters/aquafin.png'
+        evolution: null,
+        description: 'An evolved form of Bonzumi with greater fire manipulation abilities.',
+        portrait: 'assets/images/monsters/bonzire.png',
+        rarity: 'common'
     },
     {
         id: 3,
-        name: 'Terravine',
-        element: ELEMENT_TYPES.EARTH,
+        name: 'Pelijet',
+        element: ELEMENT_TYPES.WATER,
         baseStats: {
-            hp: 35,
-            attack: 5,
-            defense: 9,
-            manaCapacity: 11
+            hp: 28,
+            attack: 6,
+            defense: 7,
+            manaCost: 6
         },
         ability: {
-            name: 'Root Grasp',
-            description: 'Entangles the opponent with roots, dealing earth damage and potentially immobilizing them.',
-            damage: 4,
-            effectChance: 0.3,
+            name: 'Hydro Rush',
+            description: 'Attacks for 10 HP and converts 3 random tiles to Water.',
+            damage: 10,
             effect: {
-                type: 'STUN',
-                duration: 1
+                type: 'CONVERT_TILES',
+                element: ELEMENT_TYPES.WATER,
+                count: 3
             }
         },
         evolution: {
-            name: 'Quakewood',
+            name: 'Sephanix',
+            id: 4,
             statBoosts: {
-                hp: 8,
-                attack: 2,
-                defense: 4,
-                manaCapacity: 2
+                hp: 7,
+                attack: 4,
+                defense: 3
             },
             abilityBoost: {
-                damage: 2,
-                effectChance: 0.4
+                damage: 10,
+                effect: {
+                    type: 'CONVERT_TILES',
+                    element: ELEMENT_TYPES.WATER,
+                    count: 3
+                }
             }
         },
-        description: 'A plant-like monster with vines that can burrow deep into the earth to draw power.',
-        portrait: 'assets/images/monsters/terravine.png'
+        description: 'A water-dwelling creature that can propel itself with powerful jets of water.',
+        portrait: 'assets/images/monsters/pelijet.png',
+        rarity: 'common'
     },
     {
         id: 4,
-        name: 'Zephyrwing',
-        element: ELEMENT_TYPES.AIR,
+        name: 'Sephanix',
+        element: ELEMENT_TYPES.WATER,
+        baseStats: {
+            hp: 35,
+            attack: 10,
+            defense: 10,
+            manaCost: 6
+        },
+        ability: {
+            name: 'Hydro Rush+',
+            description: 'Attacks for 20 HP and converts 3 random tiles to Water.',
+            damage: 20,
+            effect: {
+                type: 'CONVERT_TILES',
+                element: ELEMENT_TYPES.WATER,
+                count: 3
+            }
+        },
+        evolution: null,
+        description: 'An evolved form of Pelijet with enhanced water manipulation abilities.',
+        portrait: 'assets/images/monsters/sephanix.png',
+        rarity: 'common'
+    },
+    {
+        id: 5,
+        name: 'Turtlelisk',
+        element: ELEMENT_TYPES.EARTH,
+        baseStats: {
+            hp: 32,
+            attack: 5,
+            defense: 10,
+            manaCost: 6
+        },
+        ability: {
+            name: 'Heal Leaf',
+            description: 'Attacks for 10 HP and heals you for 10 HP.',
+            damage: 10,
+            effect: {
+                type: 'HEAL',
+                amount: 10
+            }
+        },
+        evolution: {
+            name: 'Karaggon',
+            id: 6,
+            statBoosts: {
+                hp: 8,
+                attack: 3,
+                defense: 5
+            },
+            abilityBoost: {
+                damage: 5,
+                effect: {
+                    type: 'HEAL',
+                    amount: 5
+                }
+            }
+        },
+        description: 'A turtle-like monster with a shell covered in vegetation and healing properties.',
+        portrait: 'assets/images/monsters/turtlelisk.png',
+        rarity: 'common'
+    },
+    {
+        id: 6,
+        name: 'Karaggon',
+        element: ELEMENT_TYPES.EARTH,
+        baseStats: {
+            hp: 40,
+            attack: 8,
+            defense: 15,
+            manaCost: 6
+        },
+        ability: {
+            name: 'Heal Leaf+',
+            description: 'Attacks for 15 HP and heals you for 15 HP.',
+            damage: 15,
+            effect: {
+                type: 'HEAL',
+                amount: 15
+            }
+        },
+        evolution: null,
+        description: 'An evolved form of Turtlelisk with enhanced healing capabilities.',
+        portrait: 'assets/images/monsters/karaggon.png',
+        rarity: 'common'
+    },
+    {
+        id: 7,
+        name: 'Slickitty',
+        element: ELEMENT_TYPES.ELECTRIC,
         baseStats: {
             hp: 22,
             attack: 9,
             defense: 4,
-            manaCapacity: 8
+            manaCost: 4
         },
         ability: {
-            name: 'Cyclone Strike',
-            description: 'Summons a whirlwind that deals air damage and increases the monster\'s speed.',
-            damage: 7,
-            effectChance: 0.5,
+            name: 'Electroclaw',
+            description: 'Attacks for 5 HP and matches a random 2x2 grid.',
+            damage: 5,
             effect: {
-                type: 'BUFF',
-                stat: 'speed',
-                amount: 2,
-                duration: 2
+                type: 'MATCH_GRID',
+                width: 2,
+                height: 2
             }
         },
         evolution: {
-            name: 'Stormtalon',
+            name: 'Axelraze',
+            id: 8,
             statBoosts: {
                 hp: 4,
                 attack: 4,
-                defense: 2,
-                manaCapacity: 3
+                defense: 2
             },
             abilityBoost: {
-                damage: 3,
-                effectChance: 0.6
+                damage: 5,
+                effect: {
+                    type: 'MATCH_GRID',
+                    width: 3,
+                    height: 2
+                }
             }
         },
-        description: 'A swift avian monster that can generate powerful gusts of wind with its wings.',
-        portrait: 'assets/images/monsters/zephyrwing.png'
-    },
-    {
-        id: 5,
-        name: 'Lumiglow',
-        element: ELEMENT_TYPES.LIGHT,
-        baseStats: {
-            hp: 28,
-            attack: 7,
-            defense: 6,
-            manaCapacity: 10
-        },
-        ability: {
-            name: 'Radiant Beam',
-            description: 'Fires a beam of pure light that deals damage and may temporarily blind the opponent.',
-            damage: 6,
-            effectChance: 0.35,
-            effect: {
-                type: 'ACCURACY_DOWN',
-                amount: -0.3,
-                duration: 2
-            }
-        },
-        evolution: {
-            name: 'Solarflare',
-            statBoosts: {
-                hp: 6,
-                attack: 3,
-                defense: 2,
-                manaCapacity: 3
-            },
-            abilityBoost: {
-                damage: 2,
-                effectChance: 0.45
-            }
-        },
-        description: 'A luminous monster that absorbs and channels the power of light to create dazzling attacks.',
-        portrait: 'assets/images/monsters/lumiglow.png'
-    },
-    {
-        id: 6,
-        name: 'Magmahorn',
-        element: ELEMENT_TYPES.FIRE,
-        baseStats: {
-            hp: 32,
-            attack: 7,
-            defense: 6,
-            manaCapacity: 9
-        },
-        ability: {
-            name: 'Volcanic Charge',
-            description: 'Charges at the opponent with a body cloaked in magma, dealing fire damage and leaving a trail of flames.',
-            damage: 7,
-            effectChance: 0.25,
-            effect: {
-                type: 'FIELD_EFFECT',
-                effect: 'LAVA_FIELD',
-                duration: 2
-            }
-        },
-        evolution: {
-            name: 'Eruption Beast',
-            statBoosts: {
-                hp: 7,
-                attack: 4,
-                defense: 2,
-                manaCapacity: 2
-            },
-            abilityBoost: {
-                damage: 3,
-                effectChance: 0.35
-            }
-        },
-        description: 'A rhinoceros-like monster with a body of hardened magma and a horn that can melt through steel.',
-        portrait: 'assets/images/monsters/magmahorn.png'
-    },
-    {
-        id: 7,
-        name: 'Coralshell',
-        element: ELEMENT_TYPES.WATER,
-        baseStats: {
-            hp: 33,
-            attack: 5,
-            defense: 10,
-            manaCapacity: 10
-        },
-        ability: {
-            name: 'Reef Barrier',
-            description: 'Creates a protective coral barrier that reduces damage and counterattacks with water jets.',
-            damage: 4,
-            effectChance: 0.6,
-            effect: {
-                type: 'SHIELD',
-                amount: 5,
-                duration: 2
-            }
-        },
-        evolution: {
-            name: 'Abyssal Guardian',
-            statBoosts: {
-                hp: 8,
-                attack: 2,
-                defense: 5,
-                manaCapacity: 2
-            },
-            abilityBoost: {
-                damage: 2,
-                effectChance: 0.7
-            }
-        },
-        description: 'A defensive monster covered in vibrant coral that can manipulate water pressure to create powerful barriers.',
-        portrait: 'assets/images/monsters/coralshell.png'
+        description: 'A quick feline monster that can generate electricity through its fur.',
+        portrait: 'assets/images/monsters/slickitty.png',
+        rarity: 'common'
     },
     {
         id: 8,
-        name: 'Crystalspike',
-        element: ELEMENT_TYPES.EARTH,
+        name: 'Axelraze',
+        element: ELEMENT_TYPES.ELECTRIC,
         baseStats: {
-            hp: 27,
-            attack: 8,
-            defense: 7,
-            manaCapacity: 9
+            hp: 26,
+            attack: 13,
+            defense: 6,
+            manaCost: 4
         },
         ability: {
-            name: 'Gem Shatter',
-            description: 'Launches razor-sharp crystal fragments that deal earth damage and may reduce defense.',
-            damage: 6,
-            effectChance: 0.4,
+            name: 'Electroclaw+',
+            description: 'Attacks for 10 HP and matches a random 3x2 grid.',
+            damage: 10,
             effect: {
-                type: 'DEBUFF',
-                stat: 'defense',
-                amount: -3,
-                duration: 2
+                type: 'MATCH_GRID',
+                width: 3,
+                height: 2
             }
         },
-        evolution: {
-            name: 'Geode Monarch',
-            statBoosts: {
-                hp: 6,
-                attack: 4,
-                defense: 3,
-                manaCapacity: 2
-            },
-            abilityBoost: {
-                damage: 3,
-                effectChance: 0.5
-            }
-        },
-        description: 'A monster with a body composed of glittering crystals that can be weaponized for devastating attacks.',
-        portrait: 'assets/images/monsters/crystalspike.png'
+        evolution: null,
+        description: 'An evolved form of Slickitty with enhanced electric abilities and speed.',
+        portrait: 'assets/images/monsters/axelraze.png',
+        rarity: 'common'
     },
     {
         id: 9,
-        name: 'Mistwisp',
-        element: ELEMENT_TYPES.AIR,
+        name: 'Barbenin',
+        element: ELEMENT_TYPES.PSYCHIC,
         baseStats: {
             hp: 24,
-            attack: 6,
-            defense: 5,
-            manaCapacity: 8
+            attack: 7,
+            defense: 6,
+            manaCost: 6
         },
         ability: {
-            name: 'Fog Shroud',
-            description: 'Surrounds the battlefield with thick fog, dealing air damage and increasing evasion.',
-            damage: 5,
-            effectChance: 0.5,
+            name: 'Psycho Bite',
+            description: 'Attacks for 10 HP and drains 2 Mana from opponent\'s monsters.',
+            damage: 10,
             effect: {
-                type: 'BUFF',
-                stat: 'evasion',
-                amount: 0.3,
-                duration: 2
+                type: 'DRAIN_MANA',
+                amount: 2
             }
         },
         evolution: {
-            name: 'Phantom Gale',
+            name: 'Scoprikon',
+            id: 10,
             statBoosts: {
-                hp: 5,
-                attack: 3,
-                defense: 2,
-                manaCapacity: 3
+                hp: 6,
+                attack: 4,
+                defense: 3
             },
             abilityBoost: {
-                damage: 2,
-                effectChance: 0.6
+                damage: 5,
+                effect: {
+                    type: 'DRAIN_MANA',
+                    amount: 1
+                }
             }
         },
-        description: 'An ethereal monster composed of swirling mist that can become nearly invisible during battle.',
-        portrait: 'assets/images/monsters/mistwisp.png'
+        description: 'A scorpion-like monster with psychic abilities that can drain energy from opponents.',
+        portrait: 'assets/images/monsters/barbenin.png',
+        rarity: 'common'
     },
     {
         id: 10,
-        name: 'Prismbeam',
-        element: ELEMENT_TYPES.LIGHT,
+        name: 'Scoprikon',
+        element: ELEMENT_TYPES.PSYCHIC,
         baseStats: {
-            hp: 26,
-            attack: 8,
-            defense: 5,
-            manaCapacity: 9
+            hp: 30,
+            attack: 11,
+            defense: 9,
+            manaCost: 6
         },
         ability: {
-            name: 'Spectrum Blast',
-            description: 'Fires a rainbow-colored beam that deals light damage and may hit with a random elemental effect.',
-            damage: 6,
-            effectChance: 0.4,
+            name: 'Psycho Bite+',
+            description: 'Attacks for 15 HP and drains 3 Mana from opponent\'s monsters.',
+            damage: 15,
             effect: {
-                type: 'RANDOM_ELEMENT',
+                type: 'DRAIN_MANA',
+                amount: 3
+            }
+        },
+        evolution: null,
+        description: 'An evolved form of Barbenin with enhanced psychic abilities and a more powerful stinger.',
+        portrait: 'assets/images/monsters/scoprikon.png',
+        rarity: 'common'
+    },
+    {
+        id: 11,
+        name: 'Pyrokun',
+        element: ELEMENT_TYPES.FIRE,
+        baseStats: {
+            hp: 28,
+            attack: 10,
+            defense: 6,
+            manaCost: 10
+        },
+        ability: {
+            name: 'Pyro Blitz',
+            description: 'Attacks for 20 HP and matches a random row.',
+            damage: 20,
+            effect: {
+                type: 'MATCH_ROW',
+                rows: 1
+            }
+        },
+        evolution: {
+            name: 'Magnooki',
+            id: 12,
+            statBoosts: {
+                hp: 7,
+                attack: 5,
+                defense: 3
+            },
+            abilityBoost: {
+                damage: 10,
+                effect: {
+                    type: 'MATCH_CROSS',
+                    rows: 1,
+                    columns: 1
+                }
+            }
+        },
+        description: 'A raccoon-like monster with the ability to create and manipulate fire.',
+        portrait: 'assets/images/monsters/pyrokun.png',
+        rarity: 'common'
+    },
+    {
+        id: 12,
+        name: 'Magnooki',
+        element: ELEMENT_TYPES.FIRE,
+        baseStats: {
+            hp: 35,
+            attack: 15,
+            defense: 9,
+            manaCost: 10
+        },
+        ability: {
+            name: 'Pyro Blitz+',
+            description: 'Attacks for 30 HP and matches a random row and column.',
+            damage: 30,
+            effect: {
+                type: 'MATCH_CROSS',
+                rows: 1,
+                columns: 1
+            }
+        },
+        evolution: null,
+        description: 'An evolved form of Pyrokun with mastery over fire and explosive abilities.',
+        portrait: 'assets/images/monsters/magnooki.png',
+        rarity: 'common'
+    },
+    {
+        id: 13,
+        name: 'Trashark',
+        element: ELEMENT_TYPES.WATER,
+        baseStats: {
+            hp: 30,
+            attack: 9,
+            defense: 8,
+            manaCost: 8
+        },
+        ability: {
+            name: 'Aqua Blast',
+            description: 'Attacks for 20 HP and converts 2 random tiles to Water.',
+            damage: 20,
+            effect: {
+                type: 'CONVERT_TILES',
+                element: ELEMENT_TYPES.WATER,
+                count: 2
+            }
+        },
+        evolution: {
+            name: 'Shardivore',
+            id: 14,
+            statBoosts: {
+                hp: 8,
+                attack: 4,
+                defense: 3
+            },
+            abilityBoost: {
+                damage: 5,
+                effect: {
+                    type: 'CONVERT_TILES',
+                    element: ELEMENT_TYPES.WATER,
+                    count: 1
+                }
+            }
+        },
+        description: 'A shark-like monster that thrives in polluted waters and can manipulate water currents.',
+        portrait: 'assets/images/monsters/trashark.png',
+        rarity: 'common'
+    },
+    {
+        id: 14,
+        name: 'Shardivore',
+        element: ELEMENT_TYPES.WATER,
+        baseStats: {
+            hp: 38,
+            attack: 13,
+            defense: 11,
+            manaCost: 8
+        },
+        ability: {
+            name: 'Aqua Blast+',
+            description: 'Attacks for 25 HP and converts 3 random tiles to Water.',
+            damage: 25,
+            effect: {
+                type: 'CONVERT_TILES',
+                element: ELEMENT_TYPES.WATER,
+                count: 3
+            }
+        },
+        evolution: null,
+        description: 'An evolved form of Trashark with razor-sharp fins and enhanced water manipulation.',
+        portrait: 'assets/images/monsters/shardivore.png',
+        rarity: 'common'
+    },
+    {
+        id: 15,
+        name: 'Elfini',
+        element: ELEMENT_TYPES.EARTH,
+        baseStats: {
+            hp: 25,
+            attack: 6,
+            defense: 7,
+            manaCost: 6
+        },
+        ability: {
+            name: 'Flower Dance',
+            description: 'Attacks for 5 HP and heals 5 HP at the end of turn for 3 turns.',
+            damage: 5,
+            effect: {
+                type: 'HEAL_OVER_TIME',
+                amount: 5,
+                duration: 3
+            }
+        },
+        evolution: {
+            name: 'Eidelf',
+            id: 16,
+            statBoosts: {
+                hp: 5,
+                attack: 3,
+                defense: 3
+            },
+            abilityBoost: {
+                damage: 5,
+                effect: {
+                    type: 'HEAL_OVER_TIME',
+                    amount: 5,
+                    duration: -1
+                }
+            }
+        },
+        description: 'A small, fairy-like monster that can harness the healing power of nature.',
+        portrait: 'assets/images/monsters/elfini.png',
+        rarity: 'common'
+    },
+    {
+        id: 16,
+        name: 'Eidelf',
+        element: ELEMENT_TYPES.EARTH,
+        baseStats: {
+            hp: 30,
+            attack: 9,
+            defense: 10,
+            manaCost: 6
+        },
+        ability: {
+            name: 'Flower Dance+',
+            description: 'Attacks for 10 HP and heals 10 HP at the end of turn for 2 turns.',
+            damage: 10,
+            effect: {
+                type: 'HEAL_OVER_TIME',
+                amount: 10,
+                duration: 2
+            }
+        },
+        evolution: null,
+        description: 'An evolved form of Elfini with enhanced healing abilities and nature manipulation.',
+        portrait: 'assets/images/monsters/eidelf.png',
+        rarity: 'common'
+    },
+    {
+        id: 17,
+        name: 'Winklit',
+        element: ELEMENT_TYPES.ELECTRIC,
+        baseStats: {
+            hp: 24,
+            attack: 8,
+            defense: 5,
+            manaCost: 7
+        },
+        ability: {
+            name: 'Starblitz',
+            description: 'Attacks for 15 HP and grants 1 extra move for the next turn.',
+            damage: 15,
+            effect: {
+                type: 'EXTRA_MOVE',
+                moves: 1,
                 duration: 1
             }
         },
         evolution: {
-            name: 'Chromaray',
+            name: 'Gleamur',
+            id: 18,
             statBoosts: {
-                hp: 5,
+                hp: 6,
                 attack: 4,
-                defense: 2,
-                manaCapacity: 3
+                defense: 2
             },
             abilityBoost: {
-                damage: 3,
-                effectChance: 0.5
+                damage: 5,
+                effect: {
+                    type: 'EXTRA_MOVE',
+                    moves: 0,
+                    duration: 1
+                }
             }
         },
-        description: 'A monster that can refract light through its crystalline body to create powerful multi-colored attacks.',
-        portrait: 'assets/images/monsters/prismbeam.png'
+        description: 'A star-shaped monster that can manipulate electricity and generate bright flashes of light.',
+        portrait: 'assets/images/monsters/winklit.png',
+        rarity: 'common'
+    },
+    {
+        id: 18,
+        name: 'Gleamur',
+        element: ELEMENT_TYPES.ELECTRIC,
+        baseStats: {
+            hp: 30,
+            attack: 12,
+            defense: 7,
+            manaCost: 7
+        },
+        ability: {
+            name: 'Starblitz+',
+            description: 'Attacks for 20 HP and grants 1 extra move for the next 2 turns.',
+            damage: 20,
+            effect: {
+                type: 'EXTRA_MOVE',
+                moves: 1,
+                duration: 2
+            }
+        },
+        evolution: null,
+        description: 'An evolved form of Winklit with enhanced electric abilities and the power to manipulate time.',
+        portrait: 'assets/images/monsters/gleamur.png',
+        rarity: 'common'
+    },
+    {
+        id: 19,
+        name: 'Timingo',
+        element: ELEMENT_TYPES.FIRE,
+        baseStats: {
+            hp: 26,
+            attack: 7,
+            defense: 6,
+            manaCost: 7
+        },
+        ability: {
+            name: 'Hugs',
+            description: 'Attacks for 10 HP and gives 2 mana to your other monster.',
+            damage: 10,
+            effect: {
+                type: 'GIVE_MANA',
+                amount: 2
+            }
+        },
+        evolution: {
+            name: 'Flambagant',
+            id: 20,
+            statBoosts: {
+                hp: 6,
+                attack: 4,
+                defense: 3
+            },
+            abilityBoost: {
+                damage: 10,
+                effect: {
+                    type: 'GIVE_MANA',
+                    amount: 1
+                }
+            }
+        },
+        description: 'Only appears when true love is in the air...',
+        portrait: 'assets/images/monsters/timingo.png',
+        rarity: 'rare'
+    },
+    {
+        id: 20,
+        name: 'Flambagant',
+        element: ELEMENT_TYPES.FIRE,
+        baseStats: {
+            hp: 32,
+            attack: 11,
+            defense: 9,
+            manaCost: 7
+        },
+        ability: {
+            name: 'Hugs+',
+            description: 'Attacks for 20 HP and gives 3 mana to your other monster.',
+            damage: 20,
+            effect: {
+                type: 'GIVE_MANA',
+                amount: 3
+            }
+        },
+        evolution: null,
+        description: 'Only appears when true love is in the air...',
+        portrait: 'assets/images/monsters/flambagant.png',
+        rarity: 'rare'
     }
 ];
 
@@ -520,17 +794,17 @@ const STAGES = [
     {
         id: 'mountain',
         name: 'Floating Mountains',
-        description: 'An arena set among mountains that hover in the sky. Air monsters have the advantage here.',
+        description: 'An arena set among mountains that hover in the sky. Electric monsters have the advantage here.',
         background: 'assets/images/stages/mountain.jpg',
-        elementBonus: ELEMENT_TYPES.AIR,
+        elementBonus: ELEMENT_TYPES.ELECTRIC,
         bonusAmount: 1
     },
     {
         id: 'temple',
         name: 'Radiant Temple',
-        description: 'A sacred temple bathed in brilliant light. Light monsters gain power in this hallowed place.',
+        description: 'A sacred temple bathed in psychic energy. Psychic monsters gain power in this hallowed place.',
         background: 'assets/images/stages/temple.jpg',
-        elementBonus: ELEMENT_TYPES.LIGHT,
+        elementBonus: ELEMENT_TYPES.PSYCHIC,
         bonusAmount: 1
     }
 ];
@@ -674,8 +948,8 @@ const CSS_CLASSES = {
     FIRE: ELEMENT_TYPES.FIRE,
     WATER: ELEMENT_TYPES.WATER,
     EARTH: ELEMENT_TYPES.EARTH,
-    AIR: ELEMENT_TYPES.AIR,
-    LIGHT: ELEMENT_TYPES.LIGHT,
+    ELECTRIC: ELEMENT_TYPES.ELECTRIC,
+    PSYCHIC: ELEMENT_TYPES.PSYCHIC,
     BERRY: ELEMENT_TYPES.BERRY,
     
     // Log entry classes
