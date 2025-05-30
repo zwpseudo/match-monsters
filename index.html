@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Match Monsters - A hybrid match-3 and monster battling game">
+    <title>Match Monsters</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="assets/images/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <!-- Main Game Container -->
+    <div id="game-container">
+        <!-- Game Title and Menu -->
+        <header id="game-header">
+            <h1>Match Monsters</h1>
+            <div id="menu-buttons">
+                <button id="new-game-btn">New Game</button>
+                <button id="how-to-play-btn">How to Play</button>
+                <button id="settings-btn">Settings</button>
+            </div>
+        </header>
+
+        <!-- Game Board Section -->
+        <main id="game-board-section">
+            <!-- Player 1 Info -->
+            <div id="player1-info" class="player-info">
+                <div class="player-name">Player 1</div>
+                <div class="hp-container">
+                    <div class="hp-label">HP:</div>
+                    <div class="hp-bar">
+                        <div class="hp-fill" id="player1-hp-fill"></div>
+                    </div>
+                    <div class="hp-value" id="player1-hp-value">30</div>
+                </div>
+                <div class="monsters-container" id="player1-monsters">
+                    <!-- Monster slots will be populated dynamically -->
+                    <div class="monster-slot" data-index="0">
+                        <div class="monster-portrait"></div>
+                        <div class="monster-mana-bar">
+                            <div class="mana-fill"></div>
+                        </div>
+                        <div class="monster-evolution-indicator">
+                            <span class="berry-count">0</span>/4
+                        </div>
+                    </div>
+                    <div class="monster-slot" data-index="1">
+                        <div class="monster-portrait"></div>
+                        <div class="monster-mana-bar">
+                            <div class="mana-fill"></div>
+                        </div>
+                        <div class="monster-evolution-indicator">
+                            <span class="berry-count">0</span>/4
+                        </div>
+                    </div>
+                </div>
+                <div class="moves-container" id="player1-moves">
+                    <div class="moves-label">Moves:</div>
+                    <div class="moves-indicators">
+                        <div class="move-indicator"></div>
+                        <div class="move-indicator"></div>
+                        <div class="extra-move-indicator"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Match-3 Board -->
+            <div id="board-container">
+                <canvas id="game-board"></canvas>
+                <div id="turn-indicator">Player 1's Turn</div>
+            </div>
+
+            <!-- Player 2 Info -->
+            <div id="player2-info" class="player-info">
+                <div class="player-name">Player 2</div>
+                <div class="hp-container">
+                    <div class="hp-label">HP:</div>
+                    <div class="hp-bar">
+                        <div class="hp-fill" id="player2-hp-fill"></div>
+                    </div>
+                    <div class="hp-value" id="player2-hp-value">30</div>
+                </div>
+                <div class="monsters-container" id="player2-monsters">
+                    <!-- Monster slots will be populated dynamically -->
+                    <div class="monster-slot" data-index="0">
+                        <div class="monster-portrait"></div>
+                        <div class="monster-mana-bar">
+                            <div class="mana-fill"></div>
+                        </div>
+                        <div class="monster-evolution-indicator">
+                            <span class="berry-count">0</span>/4
+                        </div>
+                    </div>
+                    <div class="monster-slot" data-index="1">
+                        <div class="monster-portrait"></div>
+                        <div class="monster-mana-bar">
+                            <div class="mana-fill"></div>
+                        </div>
+                        <div class="monster-evolution-indicator">
+                            <span class="berry-count">0</span>/4
+                        </div>
+                    </div>
+                </div>
+                <div class="moves-container" id="player2-moves">
+                    <div class="moves-label">Moves:</div>
+                    <div class="moves-indicators">
+                        <div class="move-indicator"></div>
+                        <div class="move-indicator"></div>
+                        <div class="extra-move-indicator"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Game Controls -->
+        <div id="game-controls">
+            <button id="evolve-btn" class="action-btn" disabled>Evolve Monster</button>
+            <button id="boost-btn" class="action-btn" disabled>Boost Monster</button>
+            <button id="monster-info-btn" class="action-btn">Monster Info</button>
+        </div>
+
+        <!-- Game Log -->
+        <div id="game-log">
+            <div class="log-header">Game Log</div>
+            <div id="log-content"></div>
+        </div>
+    </div>
+
+    <!-- Modal Overlays -->
+    <!-- Game Mode Selection Modal -->
+    <div id="game-mode-modal" class="modal">
+        <div class="modal-content">
+            <h2>Select Game Mode</h2>
+            <div class="mode-selection">
+                <button id="draft-mode-btn" class="mode-btn">Draft Mode</button>
+                <button id="all-pick-mode-btn" class="mode-btn">All Pick</button>
+            </div>
+            <div class="mode-description" id="mode-description">
+                Choose a game mode to begin.
+            </div>
+        </div>
+    </div>
+
+    <!-- Monster Selection Modal (Draft Mode) -->
+    <div id="draft-selection-modal" class="modal">
+        <div class="modal-content">
+            <h2>Draft Your Monsters</h2>
+            <div id="draft-status">Player 1, select your first monster</div>
+            <div id="available-monsters" class="monster-grid"></div>
+        </div>
+    </div>
+
+    <!-- Monster Selection Modal (All Pick Mode) -->
+    <div id="all-pick-modal" class="modal">
+        <div class="modal-content">
+            <h2>Choose Your Monsters</h2>
+            <div id="all-pick-status">Player 1, select 2 monsters (one from each element)</div>
+            <div id="all-pick-monsters" class="monster-grid"></div>
+            <button id="confirm-selection-btn" disabled>Confirm Selection</button>
+        </div>
+    </div>
+
+    <!-- Monster Info Modal -->
+    <div id="monster-info-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="monster-info-name">Monster Name</h2>
+            <div class="monster-info-content">
+                <div class="monster-portrait large" id="monster-info-portrait"></div>
+                <div class="monster-details">
+                    <div class="monster-element">Element: <span id="monster-info-element">Fire</span></div>
+                    <div class="monster-hp">HP: <span id="monster-info-hp">10</span></div>
+                    <div class="monster-attack">Attack: <span id="monster-info-attack">5</span></div>
+                    <div class="monster-ability">
+                        <h3>Special Ability</h3>
+                        <p id="monster-info-ability">Description of special ability</p>
+                    </div>
+                    <div class="monster-evolution">
+                        <h3>Evolution</h3>
+                        <p id="monster-info-evolution">Description of evolution effects</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="modal">
+        <div class="modal-content">
+            <h2>Game Over</h2>
+            <div id="winner-display">Player 1 Wins!</div>
+            <div class="game-stats">
+                <div id="match-duration">Match Duration: 5:23</div>
+                <div id="moves-made">Total Moves: 24</div>
+                <div id="matches-made">Total Matches: 36</div>
+            </div>
+            <div class="game-over-buttons">
+                <button id="play-again-btn">Play Again</button>
+                <button id="main-menu-btn">Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- How to Play Modal -->
+    <div id="how-to-play-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>How to Play Match Monsters</h2>
+            <div class="how-to-play-content">
+                <div class="how-to-section">
+                    <h3>Game Basics</h3>
+                    <p>Match Monsters is a hybrid of a match-3 and monster battling game. Players make matches on the board to power up their monsters and unleash damaging attacks.</p>
+                </div>
+                <div class="how-to-section">
+                    <h3>Selection Modes</h3>
+                    <h4>Draft Mode</h4>
+                    <p>Each player will choose 2 monsters in the form of a draft. The 1st player is randomly chosen and will choose one monster. The 2nd player will choose their 2 monsters. The 1st player will then choose their final monster.</p>
+                    <h4>All Pick</h4>
+                    <p>Each player chooses 2 monsters for the battle. You can only choose 1 monster from each element.</p>
+                </div>
+                <div class="how-to-section">
+                    <h3>Gameplay</h3>
+                    <p>Each player is given 2 moves per turn. During a move, you can make matches by tapping or sliding an elemental tile on the board to create a match of 3 or more.</p>
+                    <p>When you match elements that correspond to your monster's element, it will fill up that monster's mana bar. When a monster's mana bar is full, it will automatically perform its special ability.</p>
+                </div>
+                <div class="how-to-section">
+                    <h3>Evolutions & Boosts</h3>
+                    <p>You can evolve a monster by feeding them 4 Berries. To collect Berries, match 3 or more of them on the board.</p>
+                    <p>If you have an evolved monster and 4 Berries, you can boost that monster to add 4 elements to its mana bar.</p>
+                    <p>Both evolving and boosting consume 1 move in your turn.</p>
+                </div>
+                <div class="how-to-section">
+                    <h3>Extra Moves</h3>
+                    <p>When you match a row or column of 4 or more elements, you will get an Extra Move for that turn. You are only allowed 1 Extra Move per turn.</p>
+                </div>
+                <div class="how-to-section">
+                    <h3>Winning the Game</h3>
+                    <p>The game ends when a player's HP reaches zero!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <h2>Loading Match Monsters</h2>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <div class="loading-text">Preparing monsters...</div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/constants.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/monsters.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
