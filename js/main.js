@@ -119,26 +119,45 @@ function loadAssets() {
     return new Promise((resolve, reject) => {
         // Define assets to load
         const assetsToLoad = [
-            // Images
-            { type: 'image', id: 'fire', src: 'assets/images/elements/fire.png' },
-            { type: 'image', id: 'water', src: 'assets/images/elements/water.png' },
-            { type: 'image', id: 'earth', src: 'assets/images/elements/earth.png' },
-            { type: 'image', id: 'air', src: 'assets/images/elements/air.png' },
-            { type: 'image', id: 'light', src: 'assets/images/elements/light.png' },
-            { type: 'image', id: 'berry', src: 'assets/images/elements/berry.png' },
+            // Element Images (SVGs)
+            { type: 'image', id: 'fire_element', src: 'assets/images/elements/fire.svg' },
+            { type: 'image', id: 'water_element', src: 'assets/images/elements/water.svg' },
+            { type: 'image', id: 'earth_element', src: 'assets/images/elements/earth.svg' },
+            { type: 'image', id: 'electric_element', src: 'assets/images/elements/electric.svg' },
+            { type: 'image', id: 'psychic_element', src: 'assets/images/elements/psychic.svg' },
+            { type: 'image', id: 'berry_element', src: 'assets/images/elements/berry.svg' },
+            
+            // UI and other images
+            { type: 'image', id: 'favicon', src: 'assets/images/favicon.svg' },
             
             // Sounds
-            { type: 'audio', id: 'match', src: 'assets/sounds/match.mp3' },
-            { type: 'audio', id: 'swap', src: 'assets/sounds/swap.mp3' },
-            { type: 'audio', id: 'invalid', src: 'assets/sounds/invalid.mp3' },
-            { type: 'audio', id: 'evolve', src: 'assets/sounds/evolve.mp3' },
-            { type: 'audio', id: 'boost', src: 'assets/sounds/boost.mp3' },
-            { type: 'audio', id: 'attack', src: 'assets/sounds/attack.mp3' },
-            { type: 'audio', id: 'damage', src: 'assets/sounds/damage.mp3' },
-            { type: 'audio', id: 'victory', src: 'assets/sounds/victory.mp3' },
-            { type: 'audio', id: 'defeat', src: 'assets/sounds/defeat.mp3' },
-            { type: 'audio', id: 'bgm', src: 'assets/sounds/bgm.mp3' }
+            { type: 'audio', id: 'match_sound', src: 'assets/sounds/match.mp3' },
+            { type: 'audio', id: 'swap_sound', src: 'assets/sounds/swap.mp3' },
+            { type: 'audio', id: 'invalid_sound', src: 'assets/sounds/invalid.mp3' },
+            { type: 'audio', id: 'evolve_sound', src: 'assets/sounds/evolve.mp3' },
+            { type: 'audio', id: 'boost_sound', src: 'assets/sounds/boost.mp3' },
+            { type: 'audio', id: 'attack_sound', src: 'assets/sounds/attack.mp3' },
+            { type: 'audio', id: 'damage_sound', src: 'assets/sounds/damage.mp3' },
+            { type: 'audio', id: 'victory_sound', src: 'assets/sounds/victory.mp3' },
+            { type: 'audio', id: 'defeat_sound', src: 'assets/sounds/defeat.mp3' },
+            { type: 'audio', id: 'bgm_sound', src: 'assets/sounds/bgm.mp3' }
         ];
+
+        // Add monster portraits dynamically
+        // Assuming MONSTERS array is available from constants.js
+        if (typeof MONSTERS !== 'undefined' && Array.isArray(MONSTERS)) {
+            MONSTERS.forEach(monster => {
+                assetsToLoad.push({
+                    type: 'monster_portrait', // Special type for fallback logic
+                    id: `monster_${monster.id}_${monster.name.toLowerCase().replace(/\s+/g, '')}`,
+                    src: monster.portrait // Base path, e.g., 'assets/images/monsters/bonzumi.webp'
+                });
+            });
+        } else {
+            if (DEBUG_MODE) {
+                console.warn('MONSTERS array not found or not an array. Monster portraits will not be loaded.');
+            }
+        }
         
         // Set total assets count
         ASSETS.total = assetsToLoad.length;
@@ -149,14 +168,24 @@ function loadAssets() {
             return;
         }
         
-        // Create assets directory structure if it doesn't exist
+        // Create assets directory structure if it doesn't exist (conceptual for client-side)
         createAssetsDirectories();
         
         // Load each asset
         let loadedCount = 0;
         
         assetsToLoad.forEach(asset => {
-            loadAsset(asset)
+            let loadPromise;
+
+            if (asset.type === 'monster_portrait') {
+                // For monster portraits, try WebP then PNG
+                loadPromise = loadAssetWithFallback(asset, 'webp', 'png');
+            } else {
+                // For other assets, load directly
+                loadPromise = loadAsset(asset);
+            }
+
+            loadPromise
                 .then(loadedAsset => {
                     // Store loaded asset
                     ASSETS.items[asset.id] = loadedAsset;
@@ -176,16 +205,18 @@ function loadAssets() {
                     loadedCount++;
                     
                     if (DEBUG_MODE) {
-                        console.error(`Failed to load asset: ${asset.id}`, error);
+                        console.error(`Failed to load asset: ${asset.id} (src: ${asset.src})`, error.message);
                     }
                     
                     // Continue loading other assets
                     if (loadedCount === ASSETS.total) {
                         // If some assets failed but we have the minimum required, continue
-                        if (ASSETS.failed < ASSETS.total / 2) {
+                        // Allow game to start if at least 50% of assets loaded (or some other threshold)
+                        if (ASSETS.failed < ASSETS.total / 2 || ASSETS.total === 0) {
+                             if (DEBUG_MODE) console.warn(`Continuing with ${ASSETS.failed} failed assets.`);
                             resolve();
                         } else {
-                            reject(new Error(`Failed to load ${ASSETS.failed} out of ${ASSETS.total} assets`));
+                            reject(new Error(`Failed to load ${ASSETS.failed} out of ${ASSETS.total} assets. Critical assets might be missing.`));
                         }
                     }
                 });
@@ -207,91 +238,135 @@ function createAssetsDirectories() {
 }
 
 /**
- * Creates placeholder assets for development
+ * Creates placeholder assets for development if primary assets fail
  */
 function createPlaceholderAssets() {
-    // Create placeholder element images
-    const elementTypes = ['fire', 'water', 'earth', 'air', 'light', 'berry'];
+    // Placeholder for element images (if SVGs fail, though unlikely)
+    const elementTypes = ['fire', 'water', 'earth', 'electric', 'psychic', 'berry'];
     const elementColors = {
         fire: '#ff5722',
         water: '#2196f3',
         earth: '#8bc34a',
-        air: '#9c27b0',
-        light: '#ffeb3b',
+        electric: '#ffeb3b', // Updated from air
+        psychic: '#9c27b0', // Updated from light
         berry: '#e91e63'
     };
     
     elementTypes.forEach(type => {
-        const canvas = document.createElement('canvas');
-        canvas.width = 64;
-        canvas.height = 64;
-        const ctx = canvas.getContext('2d');
-        
-        // Draw colored circle
-        ctx.fillStyle = elementColors[type];
-        ctx.beginPath();
-        ctx.arc(32, 32, 28, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Add border
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // Add text
-        ctx.fillStyle = 'white';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(type, 32, 32);
-        
-        // Convert to data URL
-        const dataUrl = canvas.toDataURL('image/png');
-        
-        // Store as placeholder
-        ASSETS.items[type] = new Image();
-        ASSETS.items[type].src = dataUrl;
-        ASSETS.loaded++;
+        // Only create placeholder if actual asset (SVG) hasn't loaded
+        if (!ASSETS.items[`${type}_element`]) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = elementColors[type];
+            ctx.beginPath();
+            ctx.arc(32, 32, 28, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = 'white';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(type.toUpperCase(), 32, 32);
+            
+            const dataUrl = canvas.toDataURL('image/png');
+            const placeholderImg = new Image();
+            placeholderImg.src = dataUrl;
+            ASSETS.items[`${type}_element_placeholder`] = placeholderImg; // Store with different ID
+            if(DEBUG_MODE) console.warn(`Created PNG placeholder for ${type} element.`);
+        }
     });
-    
-    // Update loading progress
-    updateLoadingProgress();
 }
 
 /**
  * Loads a single asset
- * @param {Object} asset - Asset to load
+ * @param {Object} asset - Asset to load (must have type and src)
  * @returns {Promise} Promise that resolves with the loaded asset
  */
 function loadAsset(asset) {
     return new Promise((resolve, reject) => {
+        if (!asset || !asset.src || !asset.type) {
+            reject(new Error(`Invalid asset definition: ${JSON.stringify(asset)}`));
+            return;
+        }
+
         switch (asset.type) {
             case 'image':
+            case 'monster_portrait': // Treat monster_portrait initially as image
                 const img = new Image();
                 img.onload = () => resolve(img);
-                img.onerror = () => reject(new Error(`Failed to load image: ${asset.src}`));
+                img.onerror = (err) => reject(new Error(`Failed to load image: ${asset.src}. Error: ${err.type}`));
                 img.src = asset.src;
                 break;
                 
             case 'audio':
                 const audio = new Audio();
-                audio.oncanplaythrough = () => resolve(audio);
-                audio.onerror = () => reject(new Error(`Failed to load audio: ${asset.src}`));
+                // 'canplaythrough' event can be unreliable, 'loadeddata' is often sufficient
+                audio.onloadeddata = () => resolve(audio); 
+                audio.onerror = (err) => reject(new Error(`Failed to load audio: ${asset.src}. Error code: ${audio.error ? audio.error.code : 'unknown'}`));
                 audio.src = asset.src;
                 break;
                 
             case 'json':
                 fetch(asset.src)
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error ${response.status} for ${asset.src}`);
+                        }
+                        return response.json();
+                    })
                     .then(json => resolve(json))
                     .catch(error => reject(error));
                 break;
                 
             default:
-                reject(new Error(`Unknown asset type: ${asset.type}`));
+                reject(new Error(`Unknown asset type: ${asset.type} for src: ${asset.src}`));
         }
     });
 }
+
+/**
+ * Loads an asset with a preferred type and a fallback type.
+ * @param {Object} asset - Asset definition (id, base src without extension).
+ * @param {string} preferredExtension - e.g., 'webp'.
+ * @param {string} fallbackExtension - e.g., 'png'.
+ * @returns {Promise} Promise that resolves with the loaded asset.
+ */
+function loadAssetWithFallback(asset, preferredExtension, fallbackExtension) {
+    return new Promise((resolve, reject) => {
+        // src in asset is like 'assets/images/monsters/bonzumi.webp'
+        // We need the base path to append extensions
+        const baseSrc = asset.src.substring(0, asset.src.lastIndexOf('.'));
+
+        const preferredAsset = { ...asset, src: `${baseSrc}.${preferredExtension}` };
+        loadAsset(preferredAsset)
+            .then(resolve) // Preferred loaded successfully
+            .catch(() => {
+                // Preferred failed, try fallback
+                if (DEBUG_MODE) {
+                    console.warn(`Failed to load ${preferredAsset.src}, trying fallback .${fallbackExtension}`);
+                }
+                const fallbackAsset = { ...asset, src: `${baseSrc}.${fallbackExtension}` };
+                loadAsset(fallbackAsset)
+                    .then(resolve) // Fallback loaded successfully
+                    .catch(fallbackError => {
+                        // Both failed
+                        if (DEBUG_MODE) {
+                            console.error(`Failed to load ${fallbackAsset.src} (fallback) as well.`);
+                        }
+                        // Reject with the error from the fallback attempt, or a more generic one
+                        reject(fallbackError || new Error(`Failed to load asset ${asset.id} with both .${preferredExtension} and .${fallbackExtension}`));
+                    });
+            });
+    });
+}
+
 
 /**
  * Updates the loading progress display
@@ -300,15 +375,15 @@ function updateLoadingProgress() {
     const progress = ASSETS.total > 0 ? (ASSETS.loaded / ASSETS.total) * 100 : 100;
     
     // Update loading bar
-    const loadingProgress = document.querySelector('.loading-progress');
-    if (loadingProgress) {
-        loadingProgress.style.width = `${progress}%`;
+    const loadingProgressEl = document.querySelector('#loading-screen .loading-progress'); // More specific selector
+    if (loadingProgressEl) {
+        loadingProgressEl.style.width = `${progress}%`;
     }
     
     // Update loading text
-    const loadingText = document.querySelector('.loading-text');
-    if (loadingText) {
-        loadingText.textContent = `Loading assets... ${Math.round(progress)}%`;
+    const loadingTextEl = document.querySelector('#loading-screen .loading-text'); // More specific selector
+    if (loadingTextEl) {
+        loadingTextEl.textContent = `Loading assets... ${Math.round(progress)}%`;
     }
     
     if (DEBUG_MODE) {
@@ -316,7 +391,7 @@ function updateLoadingProgress() {
     }
 }
 
-// ==========================================================================
+// ==========================================================================\
 // Browser Compatibility
 // ==========================================================================
 
@@ -490,7 +565,7 @@ function showCompatibilityError() {
     document.body.appendChild(errorContainer);
 }
 
-// ==========================================================================
+// ==========================================================================\
 // Device Optimization
 // ==========================================================================
 
@@ -571,7 +646,7 @@ function applyHighDPIOptimizations() {
     const gameBoard = document.getElementById('game-board');
     if (gameBoard && gameBoard.getContext) {
         const ctx = gameBoard.getContext('2d');
-        const dpr = window.devicePixelRatio;
+        const dpr = window.devicePixelRatio || 1; // Fallback to 1 if undefined
         
         // Set canvas size accounting for device pixel ratio
         const styleWidth = gameBoard.clientWidth;
@@ -579,15 +654,15 @@ function applyHighDPIOptimizations() {
         
         gameBoard.width = styleWidth * dpr;
         gameBoard.height = styleHeight * dpr;
-        gameBoard.style.width = `${styleWidth}px`;
-        gameBoard.style.height = `${styleHeight}px`;
+        // gameBoard.style.width = `${styleWidth}px`; // Style width/height should be set by CSS
+        // gameBoard.style.height = `${styleHeight}px`;
         
         // Scale context
         ctx.scale(dpr, dpr);
     }
     
     if (DEBUG_MODE) {
-        console.log(`Applied high DPI optimizations (pixel ratio: ${window.devicePixelRatio})`);
+        console.log(`Applied high DPI optimizations (pixel ratio: ${window.devicePixelRatio || 1})`);
     }
 }
 
@@ -641,7 +716,7 @@ function applyPerformanceOptimizations() {
     }
 }
 
-// ==========================================================================
+// ==========================================================================\
 // Performance Monitoring
 // ==========================================================================
 
@@ -725,7 +800,7 @@ function logMemoryUsage() {
     }
 }
 
-// ==========================================================================
+// ==========================================================================\
 // Service Worker
 // ==========================================================================
 
@@ -734,7 +809,7 @@ function logMemoryUsage() {
  */
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
+        navigator.serviceWorker.register('/service-worker.js') // Assuming service-worker.js is in root
             .then(registration => {
                 if (DEBUG_MODE) {
                     console.log('Service Worker registered with scope:', registration.scope);
@@ -748,7 +823,7 @@ function registerServiceWorker() {
     }
 }
 
-// ==========================================================================
+// ==========================================================================\
 // Loading Screen
 // ==========================================================================
 
@@ -763,43 +838,43 @@ function showLoadingScreen() {
         // Create loading screen
         loadingScreen = document.createElement('div');
         loadingScreen.id = 'loading-screen';
-        loadingScreen.className = 'loading-screen';
-        loadingScreen.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a2639; display: flex; justify-content: center; align-items: center; z-index: 9999;';
+        // loadingScreen.className = 'loading-screen'; // Class is already in index.html
+        // loadingScreen.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a2639; display: flex; justify-content: center; align-items: center; z-index: 9999;';
         
         // Create loading content
         const loadingContent = document.createElement('div');
         loadingContent.className = 'loading-content';
-        loadingContent.style.cssText = 'text-align: center; width: 80%; max-width: 400px;';
+        // loadingContent.style.cssText = 'text-align: center; width: 80%; max-width: 400px;';
         
         // Create title
         const title = document.createElement('h2');
         title.textContent = 'Loading Match Monsters';
-        title.style.cssText = 'color: #e6e6e6; margin-bottom: 20px; font-size: 24px;';
+        // title.style.cssText = 'color: #e6e6e6; margin-bottom: 20px; font-size: 24px;';
         
         // Create loading bar
         const loadingBar = document.createElement('div');
         loadingBar.className = 'loading-bar';
-        loadingBar.style.cssText = 'height: 20px; background-color: rgba(0, 0, 0, 0.3); border-radius: 10px; margin: 20px 0; overflow: hidden;';
+        // loadingBar.style.cssText = 'height: 20px; background-color: rgba(0, 0, 0, 0.3); border-radius: 10px; margin: 20px 0; overflow: hidden;';
         
         const loadingProgress = document.createElement('div');
-        loadingProgress.className = 'loading-progress';
-        loadingProgress.style.cssText = 'height: 100%; width: 0%; background-color: #4a6fa5; border-radius: 10px; transition: width 0.3s ease;';
+        loadingProgress.className = 'loading-progress'; // This class is targeted by updateLoadingProgress
+        // loadingProgress.style.cssText = 'height: 100%; width: 0%; background-color: #4a6fa5; border-radius: 10px; transition: width 0.3s ease;';
         
         // Create loading text
         const loadingText = document.createElement('div');
-        loadingText.className = 'loading-text';
+        loadingText.className = 'loading-text'; // This class is targeted by updateLoadingProgress
         loadingText.textContent = 'Preparing monsters...';
-        loadingText.style.cssText = 'color: #b0b0b0; font-style: italic; animation: textFade 2s infinite;';
+        // loadingText.style.cssText = 'color: #b0b0b0; font-style: italic; animation: textFade 2s infinite;';
         
-        // Add animation style
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes textFade {
-                0% { opacity: 0.5; }
-                50% { opacity: 1; }
-                100% { opacity: 0.5; }
-            }
-        `;
+        // Add animation style (if not already in CSS)
+        // const style = document.createElement('style');
+        // style.textContent = `
+        //     @keyframes textFade {
+        //         0% { opacity: 0.5; }
+        //         50% { opacity: 1; }
+        //         100% { opacity: 0.5; }
+        //     }
+        // `;
         
         // Assemble loading screen
         loadingBar.appendChild(loadingProgress);
@@ -809,12 +884,12 @@ function showLoadingScreen() {
         loadingScreen.appendChild(loadingContent);
         
         // Add to document
-        document.head.appendChild(style);
+        // document.head.appendChild(style); // Assuming styles are in CSS
         document.body.appendChild(loadingScreen);
-    } else {
-        // Show existing loading screen
-        loadingScreen.style.display = 'flex';
     }
+    // Ensure it's visible
+    loadingScreen.style.display = 'flex';
+    loadingScreen.style.opacity = '1';
 }
 
 /**
@@ -830,14 +905,15 @@ function hideLoadingScreen() {
         
         // Remove after animation
         setTimeout(() => {
-            if (loadingScreen.parentNode) {
-                loadingScreen.parentNode.removeChild(loadingScreen);
-            }
+            loadingScreen.style.display = 'none';
+            // if (loadingScreen.parentNode) { // Keep it in DOM for reuse
+            //     loadingScreen.parentNode.removeChild(loadingScreen);
+            // }
         }, 500);
     }
 }
 
-// ==========================================================================
+// ==========================================================================\
 // Error Handling
 // ==========================================================================
 
@@ -890,11 +966,10 @@ function handleError(context, error) {
     }
     
     // Send error to analytics in production
-    if (!DEBUG_MODE && window.gtag) {
-        gtag('event', 'error', {
-            'event_category': 'error',
-            'event_label': context,
-            'value': error.message
+    if (!DEBUG_MODE && window.gtag) { // Assuming gtag for Google Analytics
+        gtag('event', 'exception', {
+            'description': `${context}: ${error.message}`,
+            'fatal': context.includes('critical') || context.includes('failed')
         });
     }
     
@@ -906,15 +981,15 @@ function handleError(context, error) {
 
 // Set up global error handling
 window.onerror = function(message, source, lineno, colno, error) {
-    handleError('Uncaught exception', error || new Error(message));
-    return false;
+    handleError('Uncaught exception', error || new Error(`${message} at ${source}:${lineno}:${colno}`));
+    return false; // Let default handler run
 };
 
 window.addEventListener('unhandledrejection', function(event) {
     handleError('Unhandled promise rejection', event.reason);
 });
 
-// ==========================================================================
+// ==========================================================================\
 // Startup
 // ==========================================================================
 
@@ -927,7 +1002,7 @@ if (document.readyState === 'loading') {
 
 // Expose game to window for debugging
 if (DEBUG_MODE) {
-    window.game = game;
-    window.ASSETS = ASSETS;
-    window.PERFORMANCE = PERFORMANCE;
+    window.MatchMonstersGame = game; // More specific global name
+    window.MatchMonstersAssets = ASSETS;
+    window.MatchMonstersPerformance = PERFORMANCE;
 }
