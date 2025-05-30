@@ -1,0 +1,91 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true,
+    "es2020": true
+  },
+  "extends": [
+    "eslint:recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module"
+  },
+  "globals": {
+    "GAME_CONFIG": "readonly",
+    "ELEMENT_TYPES": "readonly",
+    "GAME_MODES": "readonly",
+    "GAME_STATES": "readonly",
+    "PLAYERS": "readonly",
+    "UI_SELECTORS": "readonly",
+    "EVENTS": "readonly",
+    "CSS_CLASSES": "readonly",
+    "STORAGE_KEYS": "readonly",
+    "EventSystem": "readonly"
+  },
+  "rules": {
+    // Error Prevention
+    "no-var": "error",
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-undef": "error",
+    "no-global-assign": "error",
+    "no-prototype-builtins": "warn",
+    "no-param-reassign": ["warn", { "props": false }],
+    "no-useless-escape": "warn",
+    "no-constant-condition": ["error", { "checkLoops": false }],
+    "no-empty": ["error", { "allowEmptyCatch": true }],
+    
+    // Best Practices
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
+    "curly": ["error", "multi-line"],
+    "default-case": "warn",
+    "dot-notation": "warn",
+    "prefer-const": "warn",
+    "prefer-template": "warn",
+    "prefer-arrow-callback": "warn",
+    "prefer-destructuring": ["warn", { "array": false, "object": true }],
+    "prefer-spread": "warn",
+    "prefer-rest-params": "warn",
+    "no-return-await": "warn",
+    "require-await": "warn",
+    
+    // Variable Declaration
+    "block-scoped-var": "error",
+    "no-use-before-define": ["error", { "functions": false }],
+    "no-shadow": "warn",
+    "no-shadow-restricted-names": "error",
+    
+    // Code Style
+    "semi": ["error", "always"],
+    "quotes": ["warn", "single", { "avoidEscape": true, "allowTemplateLiterals": true }],
+    "comma-dangle": ["warn", "only-multiline"],
+    "arrow-parens": ["warn", "as-needed"],
+    "arrow-body-style": ["warn", "as-needed"],
+    "brace-style": ["warn", "1tbs", { "allowSingleLine": true }],
+    "indent": ["warn", 4, { "SwitchCase": 1 }],
+    "max-len": ["warn", { "code": 120, "ignoreComments": true, "ignoreStrings": true, "ignoreTemplateLiterals": true }],
+    "no-multiple-empty-lines": ["warn", { "max": 2, "maxEOF": 1 }],
+    "object-curly-spacing": ["warn", "always"],
+    "array-bracket-spacing": ["warn", "never"],
+    
+    // Console and Debugging
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-debugger": "warn",
+    
+    // Overrides for specific patterns
+    "no-alert": "warn",
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-new-func": "error",
+    "no-script-url": "error",
+    "no-new-wrappers": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/main.js"],
+      "rules": {
+        "no-console": "off" // Allow console in main.js for initialization logging
+      }
+    }
+  ]
+}

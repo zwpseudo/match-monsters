@@ -1,0 +1,52 @@
+{
+  "name": "match-monsters",
+  "version": "1.0.0",
+  "description": "A web-based JavaScript game that fuses match-3 puzzle mechanics with strategic monster battling",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -c-1 -p 8080",
+    "dev": "http-server -c-1 --watch -p 8080",
+    "lint": "eslint js/",
+    "format": "prettier --write \"**/*.{js,html,css,md}\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-user/match-monsters.git"
+  },
+  "keywords": [
+    "match-3",
+    "puzzle-game",
+    "monster-battling",
+    "web-game",
+    "javascript-game",
+    "html5-canvas",
+    "turn-based",
+    "multiplayer",
+    "browser-game"
+  ],
+  "author": "Amp OD",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/your-user/match-monsters/issues"
+  },
+  "homepage": "https://github.com/your-user/match-monsters#readme",
+  "devDependencies": {
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^8.8.0",
+    "http-server": "^14.1.1",
+    "prettier": "^2.8.8"
+  },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 Edge versions",
+    "not IE 11",
+    "not dead"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "private": true
+}
