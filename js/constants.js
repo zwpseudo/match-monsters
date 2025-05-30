@@ -152,7 +152,7 @@ const MONSTERS = [
             }
         },
         description: 'A fiery monkey-like monster with a blazing tail.',
-        portrait: 'assets/images/monsters/bonzumi.png',
+        portrait: 'assets/images/monsters/bonzumi.webp',
         rarity: 'common'
     },
     {
@@ -176,7 +176,7 @@ const MONSTERS = [
         },
         evolution: null,
         description: 'An evolved form of Bonzumi with greater fire manipulation abilities.',
-        portrait: 'assets/images/monsters/bonzire.png',
+        portrait: 'assets/images/monsters/bonzire.webp',
         rarity: 'common'
     },
     {
@@ -217,7 +217,7 @@ const MONSTERS = [
             }
         },
         description: 'A water-dwelling creature that can propel itself with powerful jets of water.',
-        portrait: 'assets/images/monsters/pelijet.png',
+        portrait: 'assets/images/monsters/pelijet.webp',
         rarity: 'common'
     },
     {
@@ -242,7 +242,7 @@ const MONSTERS = [
         },
         evolution: null,
         description: 'An evolved form of Pelijet with enhanced water manipulation abilities.',
-        portrait: 'assets/images/monsters/sephanix.png',
+        portrait: 'assets/images/monsters/sephanix.webp',
         rarity: 'common'
     },
     {
@@ -281,7 +281,7 @@ const MONSTERS = [
             }
         },
         description: 'A turtle-like monster with a shell covered in vegetation and healing properties.',
-        portrait: 'assets/images/monsters/turtlelisk.png',
+        portrait: 'assets/images/monsters/turtlelisk.webp',
         rarity: 'common'
     },
     {
@@ -305,7 +305,7 @@ const MONSTERS = [
         },
         evolution: null,
         description: 'An evolved form of Turtlelisk with enhanced healing capabilities.',
-        portrait: 'assets/images/monsters/karaggon.png',
+        portrait: 'assets/images/monsters/karaggon.webp',
         rarity: 'common'
     },
     {
@@ -346,7 +346,7 @@ const MONSTERS = [
             }
         },
         description: 'A quick feline monster that can generate electricity through its fur.',
-        portrait: 'assets/images/monsters/slickitty.png',
+        portrait: 'assets/images/monsters/slickitty.webp',
         rarity: 'common'
     },
     {
@@ -371,7 +371,7 @@ const MONSTERS = [
         },
         evolution: null,
         description: 'An evolved form of Slickitty with enhanced electric abilities and speed.',
-        portrait: 'assets/images/monsters/axelraze.png',
+        portrait: 'assets/images/monsters/axelraze.webp',
         rarity: 'common'
     },
     {
@@ -410,7 +410,7 @@ const MONSTERS = [
             }
         },
         description: 'A scorpion-like monster with psychic abilities that can drain energy from opponents.',
-        portrait: 'assets/images/monsters/barbenin.png',
+        portrait: 'assets/images/monsters/barbenin.webp',
         rarity: 'common'
     },
     {
@@ -434,7 +434,7 @@ const MONSTERS = [
         },
         evolution: null,
         description: 'An evolved form of Barbenin with enhanced psychic abilities and a more powerful stinger.',
-        portrait: 'assets/images/monsters/scoprikon.png',
+        portrait: 'assets/images/monsters/scoprikon.webp',
         rarity: 'common'
     },
     {
@@ -474,7 +474,7 @@ const MONSTERS = [
             }
         },
         description: 'A raccoon-like monster with the ability to create and manipulate fire.',
-        portrait: 'assets/images/monsters/pyrokun.png',
+        portrait: 'assets/images/monsters/pyrokun.webp',
         rarity: 'common'
     },
     {
@@ -499,7 +499,7 @@ const MONSTERS = [
         },
         evolution: null,
         description: 'An evolved form of Pyrokun with mastery over fire and explosive abilities.',
-        portrait: 'assets/images/monsters/magnooki.png',
+        portrait: 'assets/images/monsters/magnooki.webp',
         rarity: 'common'
     },
     {
@@ -540,7 +540,7 @@ const MONSTERS = [
             }
         },
         description: 'A shark-like monster that thrives in polluted waters and can manipulate water currents.',
-        portrait: 'assets/images/monsters/trashark.png',
+        portrait: 'assets/images/monsters/trashark.webp',
         rarity: 'common'
     },
     {
@@ -565,7 +565,7 @@ const MONSTERS = [
         },
         evolution: null,
         description: 'An evolved form of Trashark with razor-sharp fins and enhanced water manipulation.',
-        portrait: 'assets/images/monsters/shardivore.png',
+        portrait: 'assets/images/monsters/shardivore.webp',
         rarity: 'common'
     },
     {
@@ -601,12 +601,12 @@ const MONSTERS = [
                 effect: {
                     type: 'HEAL_OVER_TIME',
                     amount: 5,
-                    duration: -1
+                    duration: -1 // Duration changed to 2 turns in evolved form, -1 means no change from base
                 }
             }
         },
         description: 'A small, fairy-like monster that can harness the healing power of nature.',
-        portrait: 'assets/images/monsters/elfini.png',
+        portrait: 'assets/images/monsters/elfini.webp',
         rarity: 'common'
     },
     {
@@ -631,7 +631,7 @@ const MONSTERS = [
         },
         evolution: null,
         description: 'An evolved form of Elfini with enhanced healing abilities and nature manipulation.',
-        portrait: 'assets/images/monsters/eidelf.png',
+        portrait: 'assets/images/monsters/eidelf.webp',
         rarity: 'common'
     },
     {
@@ -666,13 +666,13 @@ const MONSTERS = [
                 damage: 5,
                 effect: {
                     type: 'EXTRA_MOVE',
-                    moves: 0,
-                    duration: 1
+                    moves: 0, // The base ability grants 1 move, the evolution changes duration
+                    duration: 1 // Total duration becomes 2 turns
                 }
             }
         },
         description: 'A star-shaped monster that can manipulate electricity and generate bright flashes of light.',
-        portrait: 'assets/images/monsters/winklit.png',
+        portrait: 'assets/images/monsters/winklit.webp',
         rarity: 'common'
     },
     {
@@ -697,7 +697,7 @@ const MONSTERS = [
         },
         evolution: null,
         description: 'An evolved form of Winklit with enhanced electric abilities and the power to manipulate time.',
-        portrait: 'assets/images/monsters/gleamur.png',
+        portrait: 'assets/images/monsters/gleamur.webp',
         rarity: 'common'
     },
     {
@@ -731,12 +731,12 @@ const MONSTERS = [
                 damage: 10,
                 effect: {
                     type: 'GIVE_MANA',
-                    amount: 1
+                    amount: 1 // Total becomes 3 mana
                 }
             }
         },
         description: 'Only appears when true love is in the air...',
-        portrait: 'assets/images/monsters/timingo.png',
+        portrait: 'assets/images/monsters/timingo.webp',
         rarity: 'rare'
     },
     {
@@ -760,7 +760,7 @@ const MONSTERS = [
         },
         evolution: null,
         description: 'Only appears when true love is in the air...',
-        portrait: 'assets/images/monsters/flambagant.png',
+        portrait: 'assets/images/monsters/flambagant.webp',
         rarity: 'rare'
     }
 ];
