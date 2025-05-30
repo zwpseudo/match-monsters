@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Fire Element Icon for Match Monsters -->
+  <defs>
+    <radialGradient id="fireGlow" cx="50%" cy="50%" r="65%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#fff6d5" />
+      <stop offset="30%" stop-color="#ffcc00" />
+      <stop offset="60%" stop-color="#ff7800" />
+      <stop offset="100%" stop-color="#ff3300" />
+    </radialGradient>
+    <filter id="blur" x="-15%" y="-15%" width="130%" height="130%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" />
+    </filter>
+  </defs>
+  
+  <!-- Glow effect -->
+  <circle cx="32" cy="34" r="26" fill="url(#fireGlow)" opacity="0.3" filter="url(#blur)" />
+  
+  <!-- Main flame -->
+  <path d="M32,8 
+           C32,8 38,20 45,26 
+           C52,32 48,46 40,50 
+           C36,52 28,52 24,50 
+           C16,46 12,32 19,26 
+           C26,20 32,8 32,8 Z" 
+        fill="url(#fireGlow)" />
+  
+  <!-- Inner flame -->
+  <path d="M32,16 
+           C32,16 36,24 40,28 
+           C44,32 42,42 36,44 
+           C34,45 30,45 28,44 
+           C22,42 20,32 24,28 
+           C28,24 32,16 32,16 Z" 
+        fill="#fff6d5" opacity="0.7" />
+</svg>

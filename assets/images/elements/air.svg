@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Air Element Icon for Match Monsters -->
+  <defs>
+    <radialGradient id="airGlow" cx="50%" cy="50%" r="65%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#f3e5ff" />
+      <stop offset="40%" stop-color="#d1c4e9" />
+      <stop offset="70%" stop-color="#9c27b0" />
+      <stop offset="100%" stop-color="#6a1b9a" />
+    </radialGradient>
+    <filter id="blur" x="-15%" y="-15%" width="130%" height="130%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" />
+    </filter>
+  </defs>
+  
+  <!-- Glow effect -->
+  <circle cx="32" cy="32" r="26" fill="url(#airGlow)" opacity="0.3" filter="url(#blur)" />
+  
+  <!-- Main circular air current -->
+  <circle cx="32" cy="32" r="22" fill="none" stroke="url(#airGlow)" stroke-width="6" stroke-opacity="0.8" />
+  
+  <!-- Wind swirls -->
+  <path d="M32,10 
+           C40,10 48,18 48,26 
+           C48,30 44,34 40,34 
+           C36,34 32,30 32,26 
+           C32,22 36,18 40,18 
+           C44,18 46,22 44,24" 
+        fill="none" 
+        stroke="url(#airGlow)" 
+        stroke-width="4" 
+        stroke-linecap="round" />
+        
+  <path d="M32,54 
+           C24,54 16,46 16,38 
+           C16,34 20,30 24,30 
+           C28,30 32,34 32,38 
+           C32,42 28,46 24,46 
+           C20,46 18,42 20,40" 
+        fill="none" 
+        stroke="url(#airGlow)" 
+        stroke-width="4" 
+        stroke-linecap="round" />
+  
+  <!-- Small air currents -->
+  <path d="M20,20 C22,18 26,22 24,24" 
+        fill="none" 
+        stroke="#f3e5ff" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        opacity="0.7" />
+        
+  <path d="M44,44 C42,46 38,42 40,40" 
+        fill="none" 
+        stroke="#f3e5ff" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        opacity="0.7" />
+        
+  <!-- Center wisp -->
+  <circle cx="32" cy="32" r="3" fill="#f3e5ff" opacity="0.9" />
+</svg>

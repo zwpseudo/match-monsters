@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Water Element Icon for Match Monsters -->
+  <defs>
+    <radialGradient id="waterGlow" cx="50%" cy="50%" r="65%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#e0f7ff" />
+      <stop offset="40%" stop-color="#7ad7ff" />
+      <stop offset="70%" stop-color="#2196f3" />
+      <stop offset="100%" stop-color="#0d47a1" />
+    </radialGradient>
+    <filter id="blur" x="-15%" y="-15%" width="130%" height="130%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" />
+    </filter>
+  </defs>
+  
+  <!-- Glow effect -->
+  <circle cx="32" cy="34" r="26" fill="url(#waterGlow)" opacity="0.3" filter="url(#blur)" />
+  
+  <!-- Water droplet shape -->
+  <path d="M32,8 
+           C32,8 16,30 16,40 
+           C16,48 24,56 32,56 
+           C40,56 48,48 48,40 
+           C48,30 32,8 32,8 Z" 
+        fill="url(#waterGlow)" />
+  
+  <!-- Inner highlights -->
+  <path d="M32,16 
+           C32,16 22,32 22,40 
+           C22,44 26,48 32,48 
+           C32,48 28,44 28,40 
+           C28,34 32,26 32,16 Z" 
+        fill="#e0f7ff" opacity="0.5" />
+        
+  <!-- Wave detail -->
+  <path d="M24,36 
+           C26,34 30,38 34,36 
+           C38,34 42,38 44,36"
+        stroke="#e0f7ff" 
+        stroke-width="2" 
+        fill="none" 
+        opacity="0.6" />
+</svg>

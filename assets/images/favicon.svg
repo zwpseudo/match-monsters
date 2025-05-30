@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Match Monsters Favicon -->
+  <defs>
+    <linearGradient id="monsterGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6b8cae" />
+      <stop offset="100%" stop-color="#4a6fa5" />
+    </linearGradient>
+    <radialGradient id="tileGlow" cx="50%" cy="50%" r="75%" fx="30%" fy="30%">
+      <stop offset="0%" stop-color="#ffcc80" />
+      <stop offset="100%" stop-color="#ff9800" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background tile shape -->
+  <rect x="2" y="2" width="28" height="28" rx="6" fill="url(#monsterGradient)" />
+  
+  <!-- Game tile element -->
+  <rect x="8" y="8" width="16" height="16" rx="3" fill="url(#tileGlow)" stroke="#fff" stroke-width="1" stroke-opacity="0.6" />
+  
+  <!-- Monster face elements -->
+  <circle cx="12" cy="14" r="2.5" fill="#fff" /> <!-- Left eye -->
+  <circle cx="20" cy="14" r="2.5" fill="#fff" /> <!-- Right eye -->
+  <circle cx="12" cy="14" r="1" fill="#000" /> <!-- Left pupil -->
+  <circle cx="20" cy="14" r="1" fill="#000" /> <!-- Right pupil -->
+  
+  <!-- Monster smile -->
+  <path d="M11,19 Q16,23 21,19" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" />
+  
+  <!-- Small horns -->
+  <path d="M10,8 L12,12 L14,8" fill="#4a6fa5" />
+  <path d="M18,8 L20,12 L22,8" fill="#4a6fa5" />
+</svg>
